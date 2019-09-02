@@ -73,22 +73,34 @@ class Signal:
             return Signal(x, n)
 
     # method to plot on a subplot given
-    def subplot(self, grid = True, plt = plt):
+    def subplot(self, x, y, grid = True, plt = plt):
         # create grid
         # plt.grid(grid)
-        # set x and y
-        x = self.n
-        y = self.x
-
-        plt.stem(x, y, linefmt = 'C3-', markerfmt = 'C3.', basefmt='C0:')
-        plt.show()
+        plt.stem(x, y, linefmt = 'C3-', markerfmt = 'C3.', basefmt='C0:', use_line_collection = True)
         # return plt
         return plt
 
     # method to plot on a plot given
     def plot(self, grid = True, plt = plt):
-        # call sublot and get plt plotted
-        plt = self.subplot(grid, plt)
+      # check if there is any complex value on the array
+        if np.any(np.iscomplex(self.x)):
+            # create a subplot
+            plt.subplot(2, 1, 1)
+            # create title
+            plt.title("Real Values")
+            # call subplot passing the Real values
+            self.subplot(self.n, self.x, grid, plt = plt)
+
+            # create next subplot
+            plt.subplot(2, 1, 2)
+            # create title
+            plt.title("Complex Values")
+            # call subplot passing the Complex values
+            self.subplot(self.n, np.imag(self.x), grid, plt = plt)
+        else:
+            # call sublot and get plt plotted
+            plt = self.subplot(self.n, self.x, grid, plt)
+
         # show plot
         plt.show()
 
@@ -234,7 +246,7 @@ def _equalize_range(s1, s2):
     # create n by combining both n
     n = np.mgrid[min(min(s1.n), min(s2.n)):max(max(s1.n), max(s2.n)) + 1]
     # creatw y1 with n length
-    y1 = np.zeros(len(n))
+    y1 = np.zeros(len(n), dtype = np.complex64)
     # create with y2 with length n by copying y1
     y2 = y1.copy()
     # set y1 as s1 x with length n
@@ -325,9 +337,9 @@ def real_exp(a = 1, n1 = 0, n2 = 10):
     return Signal(x, n)
 
 # function to creare complex exponential
-def complex_exp(o = 0, w = np.pi, n1 = 0, n2 = 10):
+def complex_exp(a = 1, o = 0, w = np.pi, n1 = 0, n2 = 10):
     n = np.arange(n1, n2)
-    x = np.exp( (o + w*1j)*n )
+    x = a*np.exp( (o + w*1j)*n )
     return Signal(x, n)
 
 # main function
