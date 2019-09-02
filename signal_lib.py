@@ -104,7 +104,46 @@ class Signal:
         # show plot
         plt.show()
 
-    # methdo to calculate the energy of the signal
+    # method to calculate the fast fourier transform of the signal
+    def fft(self, n = None):
+        # calculate the fft
+        x = np.fft.fft(self.x, n)
+        # create n array based of length of x
+        n = np.arange(len(x))
+        # return signal creted
+        return Signal(x, n)
+    
+    # method to calculate the full plot analisys
+    def plot_analysis(self, n = None):
+        # create subplot
+        plt.subplot(2, 2, 1)
+        # plot real values
+        plt.plot(np.real(self.x))
+        # create title
+        plt.title("Real Values")
+        # create subplot        
+        plt.subplot(2, 2, 2)
+        # plot imaginary values
+        plt.plot(np.imag(self.x))
+        # get title
+        plt.title("Imaginary Values")
+        # create subplot
+        plt.subplot(2, 2, 3)
+        # plot absolute values
+        plt.plot(np.abs(self.x))
+        # get title
+        plt.title("Absolute")
+        # create subplot
+        plt.subplot(2, 2, 4)
+        # plot angle
+        plt.plot(np.angle(self.x))
+        # get title
+        plt.title("Angle")
+
+        #show plot
+        plt.show()
+    
+    # method to calculate the energy of the signal
     def energy(self):
         # return the sum of the abs of the x squared
         return np.sum( (np.abs(self.x) ** 2) )
