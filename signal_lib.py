@@ -105,13 +105,18 @@ class Signal:
         plt.show()
 
     # method to calculate the fast fourier transform of the signal
-    def fft(self, n = None):
+    def fft(self, n = None, fold = False):
         # calculate the fft
         x = np.fft.fft(self.x, n)
         # create n array based of length of x
         n = np.arange(len(x))
         # return signal creted
-        return Signal(x, n)
+        sig = Signal(x, n)
+        # check if folded
+        if fold:
+            return _fold_signal(sig)
+        else:
+            return sig
     
     # method to calculate the full plot analisys
     def plot_analysis(self, n = None):
@@ -339,6 +344,17 @@ def _sigexp(s1, s2):
     y = y1 ** y2
     #return new singl with x = y and n = n
     return Signal(y, n)
+
+# method to fold a signal
+def _fold_signal(sig):
+    # get indices
+    idx = list(range( len(sig.x)//2 , len(sig.x) )) + list(range( len(sig.x)//2 ))
+    # new x 
+    new_x = sig.x[idx]
+    # new n
+    new_n = sig.n - len(sig.n) // 2
+    # return
+    return Signal(new_x, new_n)
 
 #==========================================================================================================================#
 #==========================================================================================================================#
