@@ -123,25 +123,25 @@ class Signal:
         # create subplot
         plt.subplot(2, 2, 1)
         # plot real values
-        plt.plot(np.real(self.x))
+        plt.plot(self.n, np.real(self.x))
         # create title
         plt.title("Real Values")
         # create subplot        
         plt.subplot(2, 2, 2)
         # plot imaginary values
-        plt.plot(np.imag(self.x))
+        plt.plot(self.n, np.imag(self.x))
         # get title
         plt.title("Imaginary Values")
         # create subplot
         plt.subplot(2, 2, 3)
         # plot absolute values
-        plt.plot(np.abs(self.x))
+        plt.plot(self.n, np.abs(self.x))
         # get title
         plt.title("Absolute")
         # create subplot
         plt.subplot(2, 2, 4)
         # plot angle
-        plt.plot(np.angle(self.x))
+        plt.plot(self.n, np.angle(self.x))
         # get title
         plt.title("Angle")
 
@@ -376,7 +376,7 @@ def unit_sample(n0 = 0, n1 = 0, n2 = 10):
 # function to creare sinusoid
 def sinusoid(a = 1, o = 0, w = np.pi, n1 = 0, n2 = 10):
     n = np.arange(n1, n2)
-    x = a*np.cos(o + w*n)
+    x = a*np.sin(o + w*n)
     return Signal(x, n)
 
 # function to create random signal
