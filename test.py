@@ -16,7 +16,6 @@ signal.plot()
 signal.spectrum()
 """
 
-n = np.linspace(-0.001, 0.001, 200)
 print(n)
 
 x = np.exp(-1000.0*np.abs(n))

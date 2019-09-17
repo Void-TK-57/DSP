@@ -115,7 +115,12 @@ class Signal:
         # create n array based of length of x
         n = np.arange(len(x))
         # return signal creted
-        return Signal(x, n)
+        sig = Signal(x, n)
+        # check if folded
+        if fold:
+            return _fold_signal(sig)
+        else:
+            return sig
     
     # method to calculate the spectrum of the signal
     def spectrum(self):
@@ -395,7 +400,7 @@ def unit_sample(n0 = 0, n1 = 0, n2 = 10):
 # function to creare sinusoid
 def sinusoid(a = 1, o = 0, w = np.pi, n1 = 0, n2 = 10):
     n = np.arange(n1, n2)
-    x = a*np.cos(o + w*n)
+    x = a*np.sin(o + w*n)
     return Signal(x, n)
 
 # function to create random signal
