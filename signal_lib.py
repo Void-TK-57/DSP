@@ -113,30 +113,53 @@ class Signal:
         # return signal creted
         return Signal(x, n)
     
+    # method to calculate the spectrum of the signal
+    def spectrum(self):
+        # calcualte the fast furier transform
+        fft = self.fft()
+        # get sampling interval 
+        T = (self.n[1] - self.n[0]) / len(self.n)
+        # get number of frenquencies  
+        N = self.x.size
+        # 1/T = frequency
+        f = np.linspace(0, 1 / T, N)
+        # plot
+        plt.ylabel("Amplitude")
+        plt.xlabel("Frequency [Hz]")
+        # plot as bar
+        plt.bar(f[:N // 2], np.abs(fft)[:N // 2] * 1 / N, width=1.5)  # 1 / N is a normalization factor
+        # show plot
+        plt.show()
+    
     # method to calculate the full plot analisys
-    def plot_analysis(self, n = None):
+    def plot_analysis(self, n = None, fold = False):
+        # check if fold is True
+        if fold:
+            x = _fold_half(self.x)
+        else:
+            x = self.x
         # create subplot
         plt.subplot(2, 2, 1)
         # plot real values
-        plt.plot(np.real(self.x))
+        plt.plot(np.real(x))
         # create title
         plt.title("Real Values")
         # create subplot        
         plt.subplot(2, 2, 2)
         # plot imaginary values
-        plt.plot(np.imag(self.x))
+        plt.plot(np.imag(x))
         # get title
         plt.title("Imaginary Values")
         # create subplot
         plt.subplot(2, 2, 3)
         # plot absolute values
-        plt.plot(np.abs(self.x))
+        plt.plot(np.abs(x))
         # get title
         plt.title("Absolute")
         # create subplot
         plt.subplot(2, 2, 4)
         # plot angle
-        plt.plot(np.angle(self.x))
+        plt.plot(np.angle(x))
         # get title
         plt.title("Angle")
 
@@ -339,6 +362,14 @@ def _sigexp(s1, s2):
     y = y1 ** y2
     #return new singl with x = y and n = n
     return Signal(y, n)
+
+# method to fold an array by half
+def _fold_half(array):
+    # indices
+    idx = list( range( len(array)//2, len(array) ) ) + list( range( len(array)//2 ) )
+    # return the array based on the folded idx
+    return array[idx]
+
 
 #==========================================================================================================================#
 #==========================================================================================================================#
