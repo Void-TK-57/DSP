@@ -105,9 +105,13 @@ class Signal:
         plt.show()
 
     # method to calculate the fast fourier transform of the signal
-    def fft(self, n = None):
+    def fft(self, n = None, fold = False):
         # calculate the fft
         x = np.fft.fft(self.x, n)
+        # check fold
+        if fold:
+            x = np.concatenate( [ x[len(x)//2:], x[:len(x)//2] ] )
+        # else, dont change it
         # create n array based of length of x
         n = np.arange(len(x))
         # return signal creted
@@ -419,5 +423,4 @@ if __name__ == "__main__":
     sig.plot()
     h.plot()
     conv = sig.convolution(h)
-    print(conv)
     conv.plot()

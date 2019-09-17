@@ -6,13 +6,33 @@ from signal_lib import *
 
 import scipy.signal as sgn
 
-signal1 = complex_exp(a = .05, w = np.pi*0.121, n1 = -75, n2 = 75)
-signal2 = complex_exp(a = .05, w = np.pi*0.1, n1 = -75, n2 = 75)
+"""
+signal = unit_step(-5, -10, 11) - unit_step(5, -10, 11)
 
-signal = signal1 + signal2
-
-signal.plot()
-
-signal = complex_exp(a = 1, w = np.pi*0.1, n1 = -50, n2 = 50)
+signal = sinusoid(a = 2, o = 0, w = np.pi*0.05, n1 = 0, n2 = 500)
 
 signal.plot()
+
+signal.spectrum()
+"""
+
+n = np.linspace(-0.001, 0.001, 200)
+print(n)
+
+x = np.exp(-1000.0*np.abs(n))
+
+sig = Signal(x, n)
+
+plt.plot(x)
+
+plt.show()
+
+sig.plot()
+
+dft = sig.fft()
+
+dft.plot()
+
+dft = sig.fft(fold = True)
+
+dft.plot()
