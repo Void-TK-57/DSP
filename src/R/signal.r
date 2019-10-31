@@ -34,7 +34,7 @@ library(R6)
     return(signal)
 }
 
-# method to do a sum
+# method to do a sub
 .sub <- function(s1, s2) {
     # equalize range
     equalized <- .equalize_range(s1, s2)
@@ -46,7 +46,7 @@ library(R6)
     return(signal)
 }
 
-# method to do a sum
+# method to do a mul
 .mul <- function(s1, s2) {
     # equalize range
     equalized <- .equalize_range(s1, s2)
@@ -58,7 +58,7 @@ library(R6)
     return(signal)
 }
 
-# method to do a sum
+# method to do a div
 .div <- function(s1, s2) {
     # equalize range
     equalized <- .equalize_range(s1, s2)
@@ -69,6 +69,20 @@ library(R6)
     # return signal
     return(signal)
 }
+
+
+# method to do a exp
+.div <- function(s1, s2) {
+    # equalize range
+    equalized <- .equalize_range(s1, s2)
+    # get sum of x
+    x <- equalized$x1 ** equalized$x2
+    # create new signal
+    signal <- Signal$new(x, equalized$n)
+    # return signal
+    return(signal)
+}
+
 
 
    
@@ -106,6 +120,13 @@ Signal <- R6::R6Class("Signal", public = list(
         print(private$x)
         print("n:")
         print(private$n)
+    },
+
+    plot = function(name = "singal", format = "jpg", local = "../../data", main="Signal", ylab="y", type="p", col="red") {
+        path <- paste(local, "/", name, ".", format, sep="")
+        jpeg(path)
+        plot(private$n, private$x, main=main, ylab=ylab, type=type, col=col)
+        dev.off()
     }
 
     ),
