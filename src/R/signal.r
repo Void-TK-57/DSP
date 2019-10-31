@@ -22,6 +22,54 @@ library(R6)
     return( list(n=n, x1=x1, x2=x2) )
 }
 
+# method to do a sum
+.sum <- function(s1, s2) {
+    # equalize range
+    equalized <- .equalize_range(s1, s2)
+    # get sum of x
+    x <- equalized$x1 + equalized$x2
+    # create new signal
+    signal <- Signal$new(x, equalized$n)
+    # return signal
+    return(signal)
+}
+
+# method to do a sum
+.sub <- function(s1, s2) {
+    # equalize range
+    equalized <- .equalize_range(s1, s2)
+    # get sum of x
+    x <- equalized$x1 - equalized$x2
+    # create new signal
+    signal <- Signal$new(x, equalized$n)
+    # return signal
+    return(signal)
+}
+
+# method to do a sum
+.mul <- function(s1, s2) {
+    # equalize range
+    equalized <- .equalize_range(s1, s2)
+    # get sum of x
+    x <- equalized$x1 * equalized$x2
+    # create new signal
+    signal <- Signal$new(x, equalized$n)
+    # return signal
+    return(signal)
+}
+
+# method to do a sum
+.div <- function(s1, s2) {
+    # equalize range
+    equalized <- .equalize_range(s1, s2)
+    # get sum of x
+    x <- equalized$x1 / equalized$x2
+    # create new signal
+    signal <- Signal$new(x, equalized$n)
+    # return signal
+    return(signal)
+}
+
 
    
 # =============================================================================================================================
