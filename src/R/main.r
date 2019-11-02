@@ -1,11 +1,14 @@
 
 source("signal.r")
 
-sig <- Signal$new(c(1, 1, 1, 1, 1, 1), 1:6)
+print("=========")
 
-sig2 <- Signal$new(c(2, 2, 2, 2, 2, 2), 5:10)
+sig <- unit_step(5, n = 1:10)
+sig2 <- unit_step(7, n = 3:12)
 
 
-print("==========")
-new_n <- .sum(sig, sig2)
-sig$plot()
+sig3 <- sig + 2
+
+sig3 <- sig3 / 3
+
+print(sig3)
