@@ -5,22 +5,39 @@ import matplotlib.pyplot as plt
 from matplotlib import collections
 from scipy.signal import lfilter
 
+import datetime
+
 class Signal:
 
     def __init__(self, x = None, n = None):
-        if n is None:
-            self.n = np.mgrid[0:11]
-        else:
-            self.n = n.copy()
-        if x is None:
-            self.x = np.zeros(len(self.n))
-        else:
-            self.x = x.copy()
+        self.n = n.copy() if n is not None else np.mgrid[0:11]
+        self.x = x.copy() if x is not None else np.arange(len(self.n))
+         
+    # n property
+    @property
+    def n(self): return self._n 
+
+    @n.setter
+    def n(self, v):
+        if not (isinstance(v, np.ndarray) or isinstance(v, list) or isinstance(v, tuple)): raise Exception("Values of the Signal must be a Numpy Array or List or Tuple")
+        # set n
+        self._n = np.array(v)
+
+    # x property
+    @property
+    def x(self): return self._x 
+
+    @x.setter
+    def x(self, v):
+        if not (isinstance(v, np.ndarray) or isinstance(v, list) or isinstance(v, tuple)): raise Exception("Values of the Signal must be a Numpy Array or List or Tuple")
+        if len(v) != len(self._n): raise Exception("Domain of the Signal must be of the Same length of the values")
+        # set n
+        self._x = np.array(v)
 
     # method to do a linear covolution sum operation
     def convolution(self, other):
         # check if other is instance of Signal
-        assert (isinstance(other, Signal) )
+        assert (isinstance(other, Signal) ), "Convulation Operation must be done with another Signal"
         # new x = convolution of both x
         x = np.convolve(self.x, other.x)
         # get min values of n of boths signals
@@ -41,7 +58,7 @@ class Signal:
     # method to calculate the even signal component
     def even(self):
         # check if dtype of self.x is complex
-        assert (self.x.dtype != np.complex128 and self.x.dtype != np.complex64)
+        assert (self.x.dtype != np.complex128 and self.x.dtype != np.complex64), "Cant Get Even with complex values"
         # sum new signal identical to self + fold
         s = Signal(self.x, self.n) + self.fold()
         # return new signal s times 0.5
@@ -50,7 +67,7 @@ class Signal:
     # method to calculate the even signal component
     def odd(self):
         # check if dtype of self.x is complex
-        assert (self.x.dtype != np.complex128 and self.x.dtype != np.complex64)
+        assert (self.x.dtype != np.complex128 and self.x.dtype != np.complex64), "Cant Get Even with complex values"
         # sum new signal identical to self + fold
         s = Signal(self.x, self.n) - self.fold()
         # return new signal s times 0.5
@@ -67,10 +84,8 @@ class Signal:
         else:
             # else, create another x
             x = function(self.x.copy())
-            # copy n
-            n = self.n.copy()
             # create and return another signal
-            return Signal(x, n)
+            return Signal(x, self.n)
 
     # method to plot on a subplot given
     def subplot(self, x, y, grid = True, plt = plt):
@@ -136,7 +151,7 @@ class Signal:
         plt.ylabel("Amplitude")
         plt.xlabel("Frequency [Hz]")
         # plot as bar
-        plt.bar(f[:N // 2], np.abs(fft)[:N // 2] * 1 / N, width=1.5)  # 1 / N is a normalization factor
+        plt.bar(f[:N // 2], np.abs(fft)[:N // 2] * 1 / N, width=0.4)  # 1 / N is a normalization factor
         # show plot
         plt.show()
     
@@ -178,7 +193,7 @@ class Signal:
     # method to calculate the energy of the signal
     def energy(self):
         # return the sum of the abs of the x squared
-        return np.sum( (np.abs(self.x) ** 2) )
+        return np.sum( np.square( np.abs(self.x) ) )
 
     # method to calculate the sample sum
     def sum(self):
@@ -267,9 +282,11 @@ class Signal:
             x = self.x + other
             # create and return new signal
             return Signal(x, self.n)
-        else:
+        elif isinstance(other, Signal):
             # else, call sigmult and return teh new signal created
             return _sigadd(self, other)
+        else:
+            raise Exception("Arithmetic Opeartion must be with another int, float, numpy array or signal")
 
     # method to sub
     def __sub__(self, other):
@@ -279,9 +296,11 @@ class Signal:
             x = self.x - other
             # create and return new signal
             return Signal(x, self.n.copy())
-        else:
+        elif isinstance(other, Signal):
             # else, call sigmult and return teh new signal created
             return _sigsub(self, other)
+        else:
+            raise Exception("Arithmetic Opeartion must be with another int, float, numpy array or signal")
 
     # method to add
     def __div__(self, other):
@@ -291,9 +310,11 @@ class Signal:
             x = self.x / other
             # create and return new signal
             return Signal(x, self.n.copy())
-        else:
+        elif isinstance(other, Signal):
             # else, call sigmult and return teh new signal created
             return _sigdiv(self, other)
+        else:
+            raise Exception("Arithmetic Opeartion must be with another int, float, numpy array or signal")
 
     # method to mult
     def __mul__(self, other):
@@ -303,9 +324,11 @@ class Signal:
             x = self.x * other
             # create and return new signal
             return Signal(x, self.n.copy())
-        else:
+        elif isinstance(other, Signal):
             # else, call sigmult and return teh new signal created
             return _sigmult(self, other)
+        else:
+            raise Exception("Arithmetic Opeartion must be with another int, float, numpy array or signal")
 
 
 
@@ -423,9 +446,6 @@ def complex_exp(a = 1, o = 0, w = np.pi, n1 = 0, n2 = 10):
 
 # main function
 if __name__ == "__main__":
-    sig = unit_step(0, -5, 51) - unit_step(10, -5, 51)
-    h = real_exp(0.9, -5, 51)*unit_step(0, -5, 51)
-    sig.plot()
-    h.plot()
-    conv = sig.convolution(h)
-    conv.plot()
+    base = datetime.datetime(2000, 1, 1)
+    arr = numpy.array([base + datetime.timedelta(hours=i) for i in xrange(24)])
+    
