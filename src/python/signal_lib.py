@@ -4,35 +4,31 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import collections
 from scipy.signal import lfilter
+import seaborn as sns; sns.set()
 
-import datetime
+from datetime import datetime, time, date, timedelta
 
 class Signal:
 
-    def __init__(self, x = None, n = None):
-        self.n = n.copy() if n is not None else np.mgrid[0:11]
-        self.x = x.copy() if x is not None else np.arange(len(self.n))
+    def __init__(self, x = None):
+        self.x = x.copy() if x is not None else np.arange(len(10))
          
-    # n property
-    @property
-    def n(self): return self._n 
-
-    @n.setter
-    def n(self, v):
-        if not (isinstance(v, np.ndarray) or isinstance(v, list) or isinstance(v, tuple)): raise Exception("Values of the Signal must be a Numpy Array or List or Tuple")
-        # set n
-        self._n = np.array(v)
-
     # x property
     @property
     def x(self): return self._x 
 
     @x.setter
     def x(self, v):
-        if not (isinstance(v, np.ndarray) or isinstance(v, list) or isinstance(v, tuple)): raise Exception("Values of the Signal must be a Numpy Array or List or Tuple")
-        if len(v) != len(self._n): raise Exception("Domain of the Signal must be of the Same length of the values")
-        # set n
-        self._x = np.array(v)
+        if not (isinstance(v, np.ndarray) or isinstance(v, list) or isinstance(v, tuple) or isinstance(v, pd.Series)): raise Exception("Values of the Signal must be a Numpy Array or List or Tuple or Pandas Series")
+        if isinstance(v, pd.Series):
+            self._x = v
+        else:
+            # create time series
+            now = datetime.today()
+            # index by time
+            index = now + pd.to_timedelta(v, unit='ms') - now 
+            # set x
+            self._x = pd.Series(v.copy(), index = index)
 
     # method to do a linear covolution sum operation
     def convolution(self, other):
@@ -88,15 +84,13 @@ class Signal:
             return Signal(x, self.n)
 
     # method to plot on a subplot given
-    def subplot(self, x, y, grid = True, plt = plt):
-        # create grid
-        # plt.grid(grid)
+    def subplot(self, x, y, plt = plt):
         plt.stem(x, y, linefmt = 'C3-', markerfmt = 'C3.', basefmt='C0:', use_line_collection = True)
         # return plt
         return plt
 
     # method to plot on a plot given
-    def plot(self, grid = True, plt = plt):
+    def plot(self, plt = plt):
       # check if there is any complex value on the array
         if np.any(np.iscomplex(self.x)):
             # create a subplot
@@ -111,11 +105,10 @@ class Signal:
             # create title
             plt.title("Complex Values")
             # call subplot passing the Complex values
-            self.subplot(self.n, np.imag(self.x), grid, plt = plt)
+            self.subplot(self.n, np.imag(self.x), plt)
         else:
             # call sublot and get plt plotted
-            plt = self.subplot(self.n, self.x, grid, plt)
-
+            self.subplot(self.x.index, self.x, plt)
         # show plot
         plt.show()
 
@@ -260,19 +253,13 @@ class Signal:
         return not self.__eq__(other)
 
     # method to convert to string
-    def __str__(self):
-        #return self.n as string plus self.x on the next line
-        return "n: " + str(self.n) + "\nx: " + str(self.x)
+    def __str__(self): return str(self.x)
 
     # method to calculate the length of the signal
-    def __len__(self):
-        # return the len of indices
-        return len(self.n)
+    def __len__(self): return len(self.n)
 
     # method to get the value of the signal at index given
-    def __getitem__(self, index):
-        # return the value ate the index
-        return self.x[index]
+    def __getitem__(self, index): return self.x.iloc[index]
 
     # method to add
     def __add__(self, other):
@@ -446,6 +433,18 @@ def complex_exp(a = 1, o = 0, w = np.pi, n1 = 0, n2 = 10):
 
 # main function
 if __name__ == "__main__":
-    base = datetime.datetime(2000, 1, 1)
-    arr = numpy.array([base + datetime.timedelta(hours=i) for i in xrange(24)])
+    range_ = 200
+    n = np.arange(range_)
+    # create time series
+    now = datetime.today()
+    # index by time
+    index = now + pd.to_timedelta(np.arange(range_), unit='ms') - now 
+    # values
+    values = ( np.sin(np.pi*2*4*n/range_) + np.sin(np.pi*2*4*1.25*n/range_) ) / 2.0
+    # set x
+    time_series = pd.Series(values, index = index)
+    # create signal
+    signal = Signal(time_series)
+    # plot signal
+    signal.plot()
     
