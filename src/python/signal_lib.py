@@ -84,31 +84,19 @@ class Signal:
             return Signal(x, self.n)
 
     # method to plot on a subplot given
-    def subplot(self, x, y, plt = plt):
-        plt.stem(x, y, linefmt = 'C3-', markerfmt = 'C3.', basefmt='C0:', use_line_collection = True)
+    def subplot(self, x, y, ax = plt):
+        ax.stem(x, y, linefmt = 'C3-', markerfmt = 'C3.', basefmt='C0:', use_line_collection = True)
         # return plt
-        return plt
+        return ax
 
     # method to plot on a plot given
-    def plot(self, plt = plt):
-      # check if there is any complex value on the array
-        if np.any(np.iscomplex(self.x)):
-            # create a subplot
-            plt.subplot(2, 1, 1)
-            # create title
-            plt.title("Real Values")
-            # call subplot passing the Real values
-            self.subplot(self.n, self.x, grid, plt = plt)
-
-            # create next subplot
-            plt.subplot(2, 1, 2)
-            # create title
-            plt.title("Complex Values")
-            # call subplot passing the Complex values
-            self.subplot(self.n, np.imag(self.x), plt)
-        else:
-            # call sublot and get plt plotted
-            self.subplot(self.x.index, self.x, plt)
+    def plot(self, ax = None):
+        # check if plt is None
+        if ax is None:
+            ax = plt.subplot(1, 1, 1)
+        
+        # call sublot and get plt plotted
+        self.subplot(self.x.index.microseconds/1000, self.x, ax)
         # show plot
         plt.show()
 
@@ -393,58 +381,61 @@ def _fold_half(array):
 #==========================================================================================================================#
 #==========================================================================================================================#
 
+# function to make a Time Series
+def make_time_series(x, n, unit = 'milliseconds'):
+    # get now time date
+    now = datetime.today()
+    # get index based on time step in the unit passed
+    index = now + pd.to_timedelta(n, unit=unit) - now 
+    # create series
+    series = pd.Series(x, index=index)
+    # return series
+    return series
+    
+
 # function to create a unit step signal
 def unit_step(n0 = 0, n1 = 0, n2 = 10):
     n = np.arange(n1, n2)
     x = np.zeros(n2-n1)
     x[n0-n1:] = 1
-    return Signal(x, n)
+    return Signal( make_time_series(x, n) )
         
 # function to create a unit sample signal
 def unit_sample(n0 = 0, n1 = 0, n2 = 10):
     n = np.arange(n1, n2)
     x = np.zeros(n2-n1)
     x[n0-n1] = 1
-    return Signal(x, n)
+    return Signal( make_time_series(x, n) )
 
 # function to creare sinusoid
 def sinusoid(a = 1, o = 0, w = np.pi, n1 = 0, n2 = 10):
     n = np.arange(n1, n2)
-    x = a*np.sin(o + w*n)
-    return Signal(x, n)
+    x = a*np.sin(o + w*n/100.0)
+    return Signal( make_time_series(x, n) )
 
 # function to create random signal
 def random_signal(n1 = 0, n2 = 10):
     n = np.arange(n1, n2)
     x = np.random.rand(n2-n1)
-    return Signal(x, n)
+    return Signal( make_time_series(x, n) )
 
 # function to creare real exponential
 def real_exp(a = 1, n1 = 0, n2 = 10):
     n = np.arange(n1, n2)
     x = a**n
-    return Signal(x, n)
+    return Signal( make_time_series(x, n) )
 
 # function to creare complex exponential
 def complex_exp(a = 1, o = 0, w = np.pi, n1 = 0, n2 = 10):
     n = np.arange(n1, n2)
     x = a*np.exp( (o + w*1j)*n )
-    return Signal(x, n)
+    return Signal( make_time_series(x, n) )
 
 # main function
 if __name__ == "__main__":
-    range_ = 200
-    n = np.arange(range_)
-    # create time series
-    now = datetime.today()
-    # index by time
-    index = now + pd.to_timedelta(np.arange(range_), unit='ms') - now 
-    # values
-    values = ( np.sin(np.pi*2*4*n/range_) + np.sin(np.pi*2*4*1.25*n/range_) ) / 2.0
-    # set x
-    time_series = pd.Series(values, index = index)
-    # create signal
-    signal = Signal(time_series)
+    signal = unit_step(100, n1=0, n2 = 200)
     # plot signal
+    print(signal)
+    print(signal.x.index)
     signal.plot()
     

@@ -2,12 +2,9 @@ import numpy as np
 import scipy
 import pandas as pd 
 from matplotlib import pyplot as plt 
-import matplotlib
-from scipy.io import wavfile
-import scipy.signal as signal
-import matplotlib.animation as animation
+import wavio
 
-def main():
+def main_():
     # read wav file and get sampling rate and data
     fs, data = wavfile.read('data/piano_c5.wav')
     duration = len(data)/fs
@@ -54,6 +51,12 @@ def main():
     ani = animation.FuncAnimation( fig, animate, init_func=init, interval=100/6, blit=True, save_count=50, repeat_delay = 1000)
     #ani.save('movie.mp4')
     plt.show()
+
+
+def main(path = "../../data/8bit-C4.wav"):
+    wav_control = wavio.read(path)
+    print(wav_control)
+    print(wav_control.data)
 
 
 if __name__ == "__main__":
