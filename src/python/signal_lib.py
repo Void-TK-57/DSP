@@ -19,8 +19,8 @@ class Signal:
 
     @x.setter
     def x(self, v):
-        if not (isinstance(v, np.ndarray) or isinstance(v, list) or isinstance(v, tuple) or isinstance(v, pd.Series)): raise Exception("Values of the Signal must be a Numpy Array or List or Tuple or Pandas Series")
-        if isinstance(v, pd.Series):
+        if not (isinstance(v, np.ndarray) or isinstance(v, list) or isinstance(v, tuple) or isinstance(v, pd.Series) or isinstance(v, pd.DataFrame) ): raise Exception("Values of the Signal must be a Numpy Array or List or Tuple or Pandas Series or Panda DataFrame")
+        if isinstance(v, pd.DataFrame):
             self._x = v
         else:
             # create time series
