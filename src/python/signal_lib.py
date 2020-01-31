@@ -10,9 +10,9 @@ from datetime import datetime, time, date, timedelta
 
 class Signal:
 
-    def __init__(self, x = None):
-        self.x = x.copy() if x is not None else np.arange(len(10))
-         
+    def __init__(self, data = None):
+        self.data = data.copy() if data is not None else np.arange(len(10))
+        
     # x property
     @property
     def x(self): return self._x 
@@ -35,7 +35,7 @@ class Signal:
         # check if other is instance of Signal
         assert (isinstance(other, Signal) ), "Convulation Operation must be done with another Signal"
         # new x = convolution of both x
-        x = np.convolve(self.x, other.x)
+        x = np.convolve(self.data, other.x)
         # get min values of n of boths signals
         n_min = self.n[0] + other.n[0]
         # get max values of n of boths signals
@@ -53,19 +53,19 @@ class Signal:
 
     # method to calculate the even signal component
     def even(self):
-        # check if dtype of self.x is complex
-        assert (self.x.dtype != np.complex128 and self.x.dtype != np.complex64), "Cant Get Even with complex values"
+        # check if dtype of self.data is complex
+        assert (self.data.dtype != np.complex128 and self.data.dtype != np.complex64), "Cant Get Even with complex values"
         # sum new signal identical to self + fold
-        s = Signal(self.x, self.n) + self.fold()
+        s = Signal(self.data, self.n) + self.fold()
         # return new signal s times 0.5
         return s*0.5
 
     # method to calculate the even signal component
     def odd(self):
-        # check if dtype of self.x is complex
-        assert (self.x.dtype != np.complex128 and self.x.dtype != np.complex64), "Cant Get Even with complex values"
+        # check if dtype of self.data is complex
+        assert (self.data.dtype != np.complex128 and self.data.dtype != np.complex64), "Cant Get Even with complex values"
         # sum new signal identical to self + fold
-        s = Signal(self.x, self.n) - self.fold()
+        s = Signal(self.data, self.n) - self.fold()
         # return new signal s times 0.5
         return s*0.5
 
@@ -73,13 +73,13 @@ class Signal:
     def apply(self, function = lambda x: x, in_place = True):
         # check if it is in place
         if in_place:
-            # set self.x to the output of the functon passed
-            self.x = function(self.x)
+            # set self.data to the output of the functon passed
+            self.data = function(self.data)
             # return self
             return self
         else:
             # else, create another x
-            x = function(self.x.copy())
+            x = function(self.data.copy())
             # create and return another signal
             return Signal(x, self.n)
 
@@ -90,20 +90,16 @@ class Signal:
         return ax
 
     # method to plot on a plot given
-    def plot(self, ax = None):
-        # check if plt is None
-        if ax is None:
-            ax = plt.subplot(1, 1, 1)
-        
-        # call sublot and get plt plotted
-        self.subplot(self.x.index.microseconds/1000, self.x, ax)
+    def plot(self):
+        # call data plot
+        self.data.plot()
         # show plot
         plt.show()
 
     # method to calculate the fast fourier transform of the signal
     def fft(self, n = None, fold = False):
         # calculate the fft
-        x = np.fft.fft(self.x, n)
+        x = np.fft.fft(self.data, n)
         # check fold
         if fold:
             x = np.concatenate( [ x[len(x)//2:], x[:len(x)//2] ] )
@@ -125,7 +121,7 @@ class Signal:
         # get sampling interval 
         T = (self.n[1] - self.n[0]) / len(self.n)
         # get number of frenquencies  
-        N = self.x.size
+        N = self.data.size
         # 1/T = frequency
         f = np.linspace(0, 1 / T, N)
         # plot
@@ -140,9 +136,9 @@ class Signal:
     def plot_analysis(self, n = None, fold = False):
         # check if fold is True
         if fold:
-            x = _fold_half(self.x)
+            x = _fold_half(self.data)
         else:
-            x = self.x
+            x = self.data
         # create subplot
         plt.subplot(2, 2, 1)
         # plot real values
@@ -174,22 +170,22 @@ class Signal:
     # method to calculate the energy of the signal
     def energy(self):
         # return the sum of the abs of the x squared
-        return np.sum( np.square( np.abs(self.x) ) )
+        return np.sum( np.square( np.abs(self.data) ) )
 
     # method to calculate the sample sum
     def sum(self):
         # return sum of values of the signal
-        return np.sum(self.x)
+        return np.sum(self.data)
 
     # method to calculate the sample prod
     def prod(self):
         # return prod of values of the signal
-        return np.prod(self.x)
+        return np.prod(self.data)
 
     # method to do a fold operation
     def fold(self):
         # copy x and n
-        x = self.x.copy()
+        x = self.data.copy()
         n = self.n.copy()
         #flip x and n
         x = x[::-1]
@@ -201,38 +197,38 @@ class Signal:
 
     # method to return the real part signal
     def real(self):
-        return Signal(np.real(self.x), self.n)
+        return Signal(np.real(self.data), self.n)
 
     # method to return the imag part signal
     def imag(self):
-        return Signal(np.imag(self.x), self.n)
+        return Signal(np.imag(self.data), self.n)
 
     # method to return the abs part signal
     def abs(self):
-        return Signal(np.abs(self.x), self.n)
+        return Signal(np.abs(self.data), self.n)
 
     # method to return the angle part signal
     def angle(self):
-        return Signal(np.angle(self.x), self.n)
+        return Signal(np.angle(self.data), self.n)
 
     # method to to a shift of the signal
     def __rshift__(self, k):
         # increase indices of n (so the values in k will be shifted to the right)
         n = self.n.copy() + k
-        # create and return new signal with x = self.x and n = new n
-        return Signal(self.x.copy(), n)
+        # create and return new signal with x = self.data and n = new n
+        return Signal(self.data.copy(), n)
 
     # method to to a shift of the signal    
     def __lshift__(self, k):
         # decrease indices of n (so the values in k will be shifted to the left)
         n = self.n.copy() - k
-        # create and return new signal with x = self.x and n = new n
-        return Signal(self.x.copy(), n)
+        # create and return new signal with x = self.data and n = new n
+        return Signal(self.data.copy(), n)
 
     # method to compare the signal    
     def __eq__(self, other):
         if isinstance(other, Signal):
-            return self.n == other.n and self.x == other.n
+            return self.n == other.n and self.data == other.n
         return False
 
     # method to compare the signal    
@@ -241,20 +237,20 @@ class Signal:
         return not self.__eq__(other)
 
     # method to convert to string
-    def __str__(self): return str(self.x)
+    def __str__(self): return str(self.data)
 
     # method to calculate the length of the signal
     def __len__(self): return len(self.n)
 
     # method to get the value of the signal at index given
-    def __getitem__(self, index): return self.x.iloc[index]
+    def __getitem__(self, index): return self.data.iloc[index]
 
     # method to add
     def __add__(self, other):
         # check if other is a scalar
         if isinstance(other, int) or isinstance(other, float) or isinstance(other, np.ndarray):
-            # mult self.x by the scalar other to be the new x
-            x = self.x + other
+            # mult self.data by the scalar other to be the new x
+            x = self.data + other
             # create and return new signal
             return Signal(x, self.n)
         elif isinstance(other, Signal):
@@ -267,8 +263,8 @@ class Signal:
     def __sub__(self, other):
         # check if other is a scalar
         if isinstance(other, int) or isinstance(other, float) or isinstance(other, np.ndarray):
-            # mult self.x by the scalar other to be the new x
-            x = self.x - other
+            # mult self.data by the scalar other to be the new x
+            x = self.data - other
             # create and return new signal
             return Signal(x, self.n.copy())
         elif isinstance(other, Signal):
@@ -281,8 +277,8 @@ class Signal:
     def __div__(self, other):
         # check if other is a scalar
         if isinstance(other, int) or isinstance(other, float) or isinstance(other, np.ndarray):
-            # mult self.x by the scalar other to be the new x
-            x = self.x / other
+            # mult self.data by the scalar other to be the new x
+            x = self.data / other
             # create and return new signal
             return Signal(x, self.n.copy())
         elif isinstance(other, Signal):
@@ -295,8 +291,8 @@ class Signal:
     def __mul__(self, other):
         # check if other is a scalar
         if isinstance(other, int) or isinstance(other, float) or isinstance(other, np.ndarray):
-            # mult self.x by the scalar other to be the new x
-            x = self.x * other
+            # mult self.data by the scalar other to be the new x
+            x = self.data * other
             # create and return new signal
             return Signal(x, self.n.copy())
         elif isinstance(other, Signal):
