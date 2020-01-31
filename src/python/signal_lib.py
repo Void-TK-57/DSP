@@ -78,10 +78,10 @@ class Signal:
             # return self
             return self
         else:
-            # else, create another x
-            x = function(self.data.copy())
+            # else, create another data
+            data = function(self.data.copy())
             # create and return another signal
-            return Signal(x, self.n)
+            return Signal(data)
 
     # method to plot on a subplot given
     def subplot(self, x, y, ax = plt):
@@ -243,64 +243,37 @@ class Signal:
     def __len__(self): return len(self.n)
 
     # method to get the value of the signal at index given
-    def __getitem__(self, index): return self.data.iloc[index]
+    def __getitem__(self, index): return self.data.iloc[index, :]
 
     # method to add
     def __add__(self, other):
-        # check if other is a scalar
-        if isinstance(other, int) or isinstance(other, float) or isinstance(other, np.ndarray):
-            # mult self.data by the scalar other to be the new x
-            x = self.data + other
-            # create and return new signal
-            return Signal(x, self.n)
-        elif isinstance(other, Signal):
-            # else, call sigmult and return teh new signal created
-            return _sigadd(self, other)
-        else:
-            raise Exception("Arithmetic Opeartion must be with another int, float, numpy array or signal")
+        if isinstance(other, Signal):
+            other = other.data
+        return self.data.add(other, fill_value = 0.0)
 
-    # method to sub
+    # method to add
     def __sub__(self, other):
-        # check if other is a scalar
-        if isinstance(other, int) or isinstance(other, float) or isinstance(other, np.ndarray):
-            # mult self.data by the scalar other to be the new x
-            x = self.data - other
-            # create and return new signal
-            return Signal(x, self.n.copy())
-        elif isinstance(other, Signal):
-            # else, call sigmult and return teh new signal created
-            return _sigsub(self, other)
-        else:
-            raise Exception("Arithmetic Opeartion must be with another int, float, numpy array or signal")
+        if isinstance(other, Signal):
+            other = other.data
+        return self.data.sub(other, fill_value = 0.0)
+
+    # method to add
+    def __mul__(self, other):
+        if isinstance(other, Signal):
+            other = other.data
+        return self.data.mul(other, fill_value = 0.0)
 
     # method to add
     def __div__(self, other):
-        # check if other is a scalar
-        if isinstance(other, int) or isinstance(other, float) or isinstance(other, np.ndarray):
-            # mult self.data by the scalar other to be the new x
-            x = self.data / other
-            # create and return new signal
-            return Signal(x, self.n.copy())
-        elif isinstance(other, Signal):
-            # else, call sigmult and return teh new signal created
-            return _sigdiv(self, other)
-        else:
-            raise Exception("Arithmetic Opeartion must be with another int, float, numpy array or signal")
+        if isinstance(other, Signal):
+            other = other.data
+        return self.data.div(other, fill_value = 0.0)
 
-    # method to mult
-    def __mul__(self, other):
-        # check if other is a scalar
-        if isinstance(other, int) or isinstance(other, float) or isinstance(other, np.ndarray):
-            # mult self.data by the scalar other to be the new x
-            x = self.data * other
-            # create and return new signal
-            return Signal(x, self.n.copy())
-        elif isinstance(other, Signal):
-            # else, call sigmult and return teh new signal created
-            return _sigmult(self, other)
-        else:
-            raise Exception("Arithmetic Opeartion must be with another int, float, numpy array or signal")
-
+    # method to add
+    def __pow__(self, other):
+        if isinstance(other, Signal):
+            other = other.data
+        return self.data.pow(other, fill_value = 0.0)
 
 
 #==========================================================================================================================#
