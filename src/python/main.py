@@ -4,6 +4,10 @@ import pandas as pd
 from matplotlib import pyplot as plt 
 import wavio
 
+from datetime import datetime, time, date, timedelta, MINYEAR
+
+import sys
+
 def main_():
     # read wav file and get sampling rate and data
     fs, data = wavfile.read('data/piano_c5.wav')
@@ -52,12 +56,35 @@ def main_():
     #ani.save('movie.mp4')
     plt.show()
 
+# create datafrme from wavio object
+def to_dataframe(wavio_object):
+    # get data
+    data = wavio_object.data.copy()
+    # get index
+    # base start
+    base = datetime.today()
+    base = base.replace(hour = 0, second=0, minute=0, microsecond=0)
+    # increase timedelta
+    index = [base, ]
+    # for each value
+    for i in range(1, wavio_object.data.shape[0]):
+        # add to index the last element + timedelta
+        index.append( index[-1] + timedelta(milliseconds=1000.0/wavio_object.rate) )
+    # create dataframe
+    dataframe = pd.DataFrame(data, index=index, columns=range(data.shape[1]))
+    return dataframe
+    
 
 def main(path = "../../data/8bit-C4.wav"):
     wav_control = wavio.read(path)
     print(wav_control)
     print(wav_control.data)
+    print( to_dataframe(wav_control) )
 
 
 if __name__ == "__main__":
-    main()
+    # get args
+    args = sys.argv
+    # get path
+    file = "8bit-C4.wav" if len(args) == 1 else args[1]
+    main("../../data/" + file)
