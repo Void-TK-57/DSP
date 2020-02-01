@@ -211,36 +211,23 @@ class Signal:
     def angle(self):
         return Signal(np.angle(self.data), self.n)
 
-    # method to to a shift of the signal
-    def __rshift__(self, k):
-        # increase indices of n (so the values in k will be shifted to the right)
-        n = self.n.copy() + k
-        # create and return new signal with x = self.data and n = new n
-        return Signal(self.data.copy(), n)
-
-    # method to to a shift of the signal    
-    def __lshift__(self, k):
-        # decrease indices of n (so the values in k will be shifted to the left)
-        n = self.n.copy() - k
-        # create and return new signal with x = self.data and n = new n
-        return Signal(self.data.copy(), n)
-
     # method to compare the signal    
     def __eq__(self, other):
         if isinstance(other, Signal):
-            return self.n == other.n and self.data == other.n
+            return np.all(signal.data == other.data)
         return False
 
     # method to compare the signal    
     def __ne__(self, other):
-        # call == method operator and return its negation
-        return not self.__eq__(other)
+        if isinstance(other, Signal):
+            return not self == other
+        return False
 
     # method to convert to string
     def __str__(self): return str(self.data)
 
     # method to calculate the length of the signal
-    def __len__(self): return len(self.n)
+    def __len__(self): return self.data.shape[0]
 
     # method to get the value of the signal at index given
     def __getitem__(self, index): return self.data.iloc[index, :]
