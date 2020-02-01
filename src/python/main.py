@@ -59,37 +59,30 @@ def main_():
     plt.show()
 
 # create datafrme from wavio object
-def to_dataframe(wavio_object, microsecond=0):
+def to_signal(wavio_object, microsecond=0):
     # get data
     data = wavio_object.data.copy()
     # get index
     # base start
     base = datetime.today()
-    base = base.replace(hour = 0, second=0, minute=0, microsecond=microsecond)
+    #base = base.replace(hour = 0, second=0, minute=0, microsecond=microsecond)
     # increase timedelta
     index = [base, ]
     # for each value
     for i in range(1, wavio_object.data.shape[0]):
         # add to index the last element + timedelta
         index.append( index[-1] + timedelta(milliseconds=1000.0/wavio_object.rate) )
-    # create dataframe
-    dataframe = pd.DataFrame(data, index=index, columns=range(data.shape[1]))
-    return dataframe
+    return [ Signal(pd.Series(data[:, i])) for i in range(data.shape[1]) ]
     
 
 def main(path = "../../data/8bit-C4.wav"):
     wav_control = wavio.read(path)
     print(wav_control)
     # creat signal
-    signal = Signal( to_dataframe(wav_control) )
-    #signal = sinusoid(w = 2*np.pi, n1 = 0, n2 = 500.0)
-    signal = square(0, 10, -5, 50)
-    signal.stem()
-    print(signal)
-    signal_2 = real_exp(0.9, 5, 50)
-    signal_2.stem()
-    print(signal_2)
-    signal.convolution(signal_2).stem()
+    signals = to_signal(wav_control)
+    signal = signals[0]
+    signal.plot()
+    #signal.fft().abs().plot()
     
 
 if __name__ == "__main__":
