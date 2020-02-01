@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import collections
 from scipy.signal import lfilter
 import seaborn as sns; sns.set()
+from scipy.fftpack import fft
 
 from datetime import datetime, time, date, timedelta
 
@@ -19,57 +20,37 @@ class Signal:
 
     @data.setter
     def data(self, v):
-        if not (isinstance(v, np.ndarray) or isinstance(v, list) or isinstance(v, tuple) or isinstance(v, pd.Series) or isinstance(v, pd.DataFrame) ): raise Exception("Values of the Signal must be a Numpy Array or List or Tuple or Pandas Series or Panda DataFrame")
-        if isinstance(v, pd.DataFrame):
+        if not (isinstance(v, np.ndarray) or isinstance(v, list) or isinstance(v, tuple) or isinstance(v, pd.Series) ): raise Exception("Values of the Signal must be a Numpy Array or List or Tuple or Pandas Series or Panda DataFrame")
+        if isinstance(v, pd.Series):
             self._data = v
         else:
             # create time series
             now = datetime.today()
             # index by time
-            index = now + pd.to_timedelta( range(len(v)) , unit='ms') - now 
+            index = now + pd.to_timedelta( range(len(v)) , unit='ms')
             # set x
-            self._data = pd.DataFrame(v.copy(), index = index)
+            self._data = pd.Series(v.copy(), index = index)
 
     # method to do a linear covolution sum operation
     def convolution(self, other):
         # get other data
         if isinstance(other, Signal):
-            other_data = other.data.values.flatten()
-        elif isinstance(other, pd.DataFrame) or isinstance(other, pd.Series):
-            other_data = other.values.flatten()
+            other_data = other.data.values
+        elif isinstance(other, pd.Series):
+            other_data = other.values
         elif isinstance(other, np.ndarray) or isinstance(other, list) or isinstance(other, tuple):
             other_data = other
         else:
             raise Exception("Invalid argument for convolution")
         # get data
         data = self.data.values.copy()
-        # apply convolve
-        convolve = np.apply_along_axis(lambda x: np.convolve(x, other_data), 0, data)
         # return convolve
-        return Signal( convolve )
+        return Signal( np.convolve(data, other_data) )
 
     # method to do a auto correlation
     def autocorrelation(self):
         # return convulation on self
         return self.convolution(self)
-
-    # method to calculate the even signal component
-    def even(self):
-        # check if dtype of self.data is complex
-        assert (self.data.dtype != np.complex128 and self.data.dtype != np.complex64), "Cant Get Even with complex values"
-        # sum new signal identical to self + fold
-        s = Signal(self.data, self.n) + self.fold()
-        # return new signal s times 0.5
-        return s*0.5
-
-    # method to calculate the even signal component
-    def odd(self):
-        # check if dtype of self.data is complex
-        assert (self.data.dtype != np.complex128 and self.data.dtype != np.complex64), "Cant Get Even with complex values"
-        # sum new signal identical to self + fold
-        s = Signal(self.data, self.n) - self.fold()
-        # return new signal s times 0.5
-        return s*0.5
 
     # method to apply a function
     def apply(self, function = lambda x: x, in_place = True):
@@ -102,38 +83,26 @@ class Signal:
     def stem(self):
         # get data
         data = self.data.values
-        # for each channel
-        for channel in range( data.shape[1] ):
-            # get ax
-            ax = plt.subplot(data.shape[1], 1, channel+1)
-            # subplot
-            self.subplot(data[:, channel], ax)
+        # call subplot
+        self.subplot(data, ax)
         # show plot
         plt.show()
 
     # method to calculate the fast fourier transform of the signal
-    def fft(self, n = None, fold = False):
+    def fft(self):
         # calculate the fft
-        x = np.fft.fft(self.data, n)
-        # check fold
-        if fold:
-            x = np.concatenate( [ x[len(x)//2:], x[:len(x)//2] ] )
-        # else, dont change it
-        # create n array based of length of x
-        n = np.arange(len(x))
-        # return signal creted
-        sig = Signal(x, n)
-        # check if folded
-        if fold:
-            return _fold_signal(sig)
-        else:
-            return sig
-    
+        fft_data = fft(self.data.values)
+        return Signal( fft_data[:len(fft_data)//2] )
+        
     # method to calculate the spectrum of the signal
     def spectrum(self):
         # calcualte the fast furier transform
-        fft = self.fft()
+        fft_data= self.fft().abs().data
+        # bar plot
+        plt.bar( range( len( fft_data.values[:len(fft_data.index) // 2, 0] ) ), fft_data.values[:len(fft_data.index) // 2, 0] , width=1) 
+        plt.show()
         # get sampling interval 
+        return ( self.data.index[1] - self.data.index[0] ) / len(self.data.index)
         T = (self.n[1] - self.n[0]) / len(self.n)
         # get number of frenquencies  
         N = self.data.size
@@ -151,7 +120,7 @@ class Signal:
     def energy(self):
         # return the sum of the abs of the x squared
         data = self.data.copy()
-        return data.apply( lambda x: np.sum( np.square( np.abs(x) ) ), axis=0 )
+        return np.sum( np.square( np.abs(data) ) )
 
     # method to calculate the sample sum
     def sum(self):
@@ -163,25 +132,25 @@ class Signal:
     def real(self):
         # return the sum of the abs of the x squared
         data = self.data.copy()
-        return Signal( data.apply( lambda x: np.real( x ) , axis=0 ) )
+        return Signal( data.apply( lambda x: np.real( x ) ) )
 
     # method to return the imag part signal
     def imag(self):
         # return the sum of the abs of the x squared
         data = self.data.copy()
-        return Signal( data.apply( lambda x: np.imag( x ) , axis=0 ) )
+        return Signal( data.apply( lambda x: np.imag( x ) ) )
 
     # method to return the abs part signal
     def abs(self):
         # return the sum of the abs of the x squared
         data = self.data.copy()
-        return Signal( data.apply( lambda x: np.abs( x ) , axis=0 ) )
+        return Signal( data.apply( lambda x: np.abs( x ) ) )
 
     # method to return the angle part signal
     def angle(self):
         # return the sum of the abs of the x squared
         data = self.data.copy()
-        return Signal( data.apply( lambda x: np.angle( x ) , axis=0 ) )
+        return Signal( data.apply( lambda x: np.angle( x ) ) )
 
     # method to compare the signal    
     def __eq__(self, other):
@@ -199,10 +168,10 @@ class Signal:
     def __str__(self): return "Signal:\n" + str(self.data)
 
     # method to calculate the length of the signal
-    def __len__(self): return self.data.shape[0]
+    def __len__(self): return len( self.data.values )
 
     # method to get the value of the signal at index given
-    def __getitem__(self, index): return self.data.iloc[index, :]
+    def __getitem__(self, index): return self.data.iloc[index]
 
     # method to add
     def __add__(self, other):
@@ -322,7 +291,6 @@ def make_time_series(x, n, unit = 'milliseconds'):
     # return series
     return series
     
-
 # function to create a unit step signal
 def unit_step(n0 = 0, n1 = 0, n2 = 10):
     n = np.arange(n1, n2)
@@ -358,7 +326,7 @@ def real_exp(a = 1, n1 = 0, n2 = 10):
 # function to creare complex exponential
 def complex_exp(a = 1, o = 0, w = np.pi, n1 = 0, n2 = 10):
     n = np.arange(n1, n2)
-    x = a*np.exp( (o + w*1j)*n )
+    x = a*np.exp( (o + w*1j)*n/100.0 )
     return Signal( make_time_series(x, n) )
 
 # function to create square signal
@@ -367,6 +335,7 @@ def square(n0=2, n1=8, n2=0, n3=10):
 
 # main function
 if __name__ == "__main__":
-    signal = unit_step(100, n1=0, n2 = 200)
+    signal = complex_exp(w = np.pi/2, n1=0, n2 = 400)
+    signal.plot()
     # plot signal
     print(signal)
