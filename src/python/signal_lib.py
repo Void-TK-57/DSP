@@ -74,12 +74,12 @@ class Signal:
         # check if it is in place
         if in_place:
             # set self.data to the output of the functon passed
-            self.data = function(self.data)
+            self.data = function(self.data, axis = 0)
             # return self
             return self
         else:
             # else, create another data
-            data = function(self.data.copy())
+            data = function(self.data.copy(), axis=0)
             # create and return another signal
             return Signal(data)
 
@@ -170,30 +170,14 @@ class Signal:
     # method to calculate the energy of the signal
     def energy(self):
         # return the sum of the abs of the x squared
-        return np.sum( np.square( np.abs(self.data) ) )
+        data = self.data.copy()
+        return data.apply( lambda x: np.sum( np.square( np.abs(x) ) ), axis=0 )
 
     # method to calculate the sample sum
     def sum(self):
-        # return sum of values of the signal
-        return np.sum(self.data)
-
-    # method to calculate the sample prod
-    def prod(self):
-        # return prod of values of the signal
-        return np.prod(self.data)
-
-    # method to do a fold operation
-    def fold(self):
-        # copy x and n
-        x = self.data.copy()
-        n = self.n.copy()
-        #flip x and n
-        x = x[::-1]
-        n = n[::-1]
-        # reverse n
-        n = n*-1
-        # create and return new signal
-        return Signal(x, n)
+        # return the sum of the abs of the x squared
+        data = self.data.copy()
+        return data.apply( lambda x: np.sum( x ) , axis=0 )
 
     # method to return the real part signal
     def real(self):
