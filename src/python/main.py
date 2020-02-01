@@ -5,6 +5,8 @@ from matplotlib import pyplot as plt
 import wavio
 
 from datetime import datetime, time, date, timedelta, MINYEAR
+from signal_lib import *
+
 
 import sys
 
@@ -57,13 +59,13 @@ def main_():
     plt.show()
 
 # create datafrme from wavio object
-def to_dataframe(wavio_object):
+def to_dataframe(wavio_object, microsecond=0):
     # get data
     data = wavio_object.data.copy()
     # get index
     # base start
     base = datetime.today()
-    base = base.replace(hour = 0, second=0, minute=0, microsecond=0)
+    base = base.replace(hour = 0, second=0, minute=0, microsecond=microsecond)
     # increase timedelta
     index = [base, ]
     # for each value
@@ -78,9 +80,17 @@ def to_dataframe(wavio_object):
 def main(path = "../../data/8bit-C4.wav"):
     wav_control = wavio.read(path)
     print(wav_control)
-    print(wav_control.data)
-    print( to_dataframe(wav_control) )
-
+    # creat signal
+    signal = Signal( to_dataframe(wav_control) )
+    #signal = sinusoid(w = 2*np.pi, n1 = 0, n2 = 500.0)
+    signal = square(0, 10, -5, 50)
+    signal.stem()
+    print(signal)
+    signal_2 = real_exp(0.9, 5, 50)
+    signal_2.stem()
+    print(signal_2)
+    signal.convolution(signal_2).stem()
+    
 
 if __name__ == "__main__":
     # get args
