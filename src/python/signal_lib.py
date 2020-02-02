@@ -58,26 +58,9 @@ class Signal:
         
     # method to calculate the spectrum of the signal
     def spectrum(self):
-        # calcualte the fast furier transform
-        fft_data= self.fft().abs().data
-        # bar plot
-        plt.bar( range( len( fft_data.values[:len(fft_data.index) // 2, 0] ) ), fft_data.values[:len(fft_data.index) // 2, 0] , width=1) 
-        plt.show()
         # get sampling interval 
-        return ( self.data.index[1] - self.data.index[0] ) / len(self.data.index)
-        T = (self.n[1] - self.n[0]) / len(self.n)
-        # get number of frenquencies  
-        N = self.data.size
-        # 1/T = frequency
-        f = np.linspace(0, 1 / T, N)
-        # plot
-        plt.ylabel("Amplitude")
-        plt.xlabel("Frequency [Hz]")
-        # plot as bar
-        plt.bar(f[:N // 2], np.abs(fft)[:N // 2] * 1 / N, width=0.4)  # 1 / N is a normalization factor
-        # show plot
-        plt.show()
-
+        return self.fft().abs()
+        
     # method to apply a function
     def apply(self, function = lambda x: x, in_place = True):
         # check if it is in place
@@ -188,6 +171,23 @@ class Signal:
         if isinstance(other, Signal):
             other = other.data
         return Signal( self.data.pow(other, fill_value = 0.0) )
+
+class TimeSignal(Signal):
+
+    def __init__(self, data, sampling_rate):
+        self._sampling_rate = sampling_rate
+        super().__init__(data)
+
+    @property
+    def sampling_rate(self): return self._sampling_rate
+
+    @sampling_rate.setter
+    def sampling_rate(self, i):
+        pass
+    
+    @property
+    def total_seconds(self):
+        return ( self.data.index[-1] - self.data.index[0] ).total_seconds()
 
 #==========================================================================================================================#
 #==========================================================================================================================#

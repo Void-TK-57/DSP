@@ -7,56 +7,46 @@ import wavio
 from datetime import datetime, time, date, timedelta, MINYEAR
 from signal_lib import *
 
+import math
 
 import sys
 
-def main_():
-    # read wav file and get sampling rate and data
-    fs, data = wavfile.read('data/piano_c5.wav')
-    duration = len(data)/fs
-    print(duration)
-    # number of frames
-    frames = 30*duration
-    print(frames)
-    # reshape the data per frame
-    data_per_frame = np.array_split(data, frames)
-    # return fft
-    def generate(data, fs):
-        # fft
-        fft = np.absolute( np.fft.rfft(data,  n = len(data)))
-        # get frequencies
-        freq = np.fft.fftfreq(len(fft), d = 1.0/fs)
-        # return fft and freq
-        return fft, freq
 
-    fft, freq = generate(data_per_frame[0], fs)
-    print(fft)
-    print(freq)
-    print(fft.shape, freq.shape)
-    plt.plot(freq, fft)
-    plt.show()
 
-    # create figure
+# function to creat spectrum
+def spectrogram(signal, fps = 60.0):
+    signal_per_frames = slice_signal(signal, math.floor( signal.total_seconds*fps) )
+    total_frames = len( signal_per_frames )
+    # create subplots
     fig, ax = plt.subplots()
-    line_plot, = ax.plot(freq, fft)
-    ax.set_xlabel("Frequencies")
-    ax.set_ylabel("Magnitude")
+    frequency, power = [], []
+    line, = plt.plot([], [], 'ro')
 
-    # function to initialize frame
     def init():
-        data, _ = generate(data_per_frame[0], fs)
-        line_plot.set_ydata( data )
-        return line_plot,
-    
-    def animate(i):
-        # change the data for the spectrum at time i, and change title to time i
-        data, _ = generate( data_per_frame[ i % len(data_per_frame) ], fs )
-        line_plot.set_ydata( data )
-        return line_plot,
+        return line,
+
+    def update(frame):
+        # get signal
+        signal = signal_per_frames[ frame % total_frames ]
+        # get fft abs
+        spectrum = signal.fft().abs()
+        # get data itself
+        data = spectrum.data
+        # get frequency
+        frequency = data.index
+        # get power
+        power = data.values
+        # set data of line plot
+        line.set_data(frequency, power)
+        # return line
+        return line,
+
     # create animation
-    ani = animation.FuncAnimation( fig, animate, init_func=init, interval=100/6, blit=True, save_count=50, repeat_delay = 1000)
-    #ani.save('movie.mp4')
+    ani = FuncAnimation(fig, update, init_func=init, blit=True)
+
+    # show plot
     plt.show()
+
 
 # create datafrme from wavio object
 def to_signal(wavio_object, microsecond=0):
@@ -71,12 +61,17 @@ def to_signal(wavio_object, microsecond=0):
     # for each value
     for i in range(1, wavio_object.data.shape[0]):
         # add to index the last element + timedelta
-        index.append( index[-1] + timedelta(milliseconds=1000.0/wavio_object.rate) )
-    return [ Signal(pd.Series(data[:, i], index = index)) for i in range(data.shape[1]) ]
+        index.append( index[-1] + timedelta(seconds=1.0/wavio_object.rate) )
+    return [ TimeSignal(pd.Series(data[:, i], index = index), wavio_object.rate) for i in range(data.shape[1]) ]
     
 # function to slice the total signal into frames
-def slice_signal(signal, sampling_rate):
-    print(signal.index)
+def slice_signal(signal, total_samples):
+    # sample size
+    sample_size = len(signal.data) // total_samples
+    # slice data
+    return list( [ TimeSignal(signal.data[ i*sample_size : (i+1)*sample_size ], signal.sampling_rate) for i in range(total_samples) ] )
+    
+
 
 def main(path = "../../data/8bit-C4.wav"):
     wav_control = wavio.read(path)
@@ -86,19 +81,10 @@ def main(path = "../../data/8bit-C4.wav"):
     signal = signals[0]
     signal.plot()
     signal.fft().abs().plot()
+    
+    # get spectrogram
+    spectrogram(signal)
 
-    #slice_signal(signal)
-    return
-
-    signal = sinusoid(w = 100*np.pi/2, sampling_rate=0.001)
-    signal.plot()
-    spec = signal.fft().abs()
-    print(spec.data)
-    print(spec.data.values.shape)
-    spec.plot()
-    
-    
-    
 
 if __name__ == "__main__":
     # get args
