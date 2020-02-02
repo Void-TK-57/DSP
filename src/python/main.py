@@ -1,94 +1,118 @@
 import numpy as np 
-import scipy
 import pandas as pd 
 from matplotlib import pyplot as plt 
-import wavio
 
-from datetime import datetime, time, date, timedelta, MINYEAR
-from signal_lib import *
+from sklearn.model_selection import train_test_split
+from keras.utils import to_categorical
 
-import math
+import librosa
+
+from backend import ANN_Model as Model
 
 import sys
 
+import os
+
+# function to get mfccs
+def extract_features(file_name, n_mfcc = 40):
+    print("Exctracting for: " + str(file_name))
+    audio, sample_rate = librosa.load(file_name, res_type='kaiser_fast') 
+    mfccs = librosa.feature.mfcc(y=audio, sr=sample_rate, n_mfcc=n_mfcc)
+    mfccs_processed = np.mean(mfccs.T,axis=0)
+    return mfccs_processed
 
 
-# function to creat spectrum
-def spectrogram(signal, fps = 60.0):
-    signal_per_frames = slice_signal(signal, math.floor( signal.total_seconds*fps) )
-    total_frames = len( signal_per_frames )
+# method to plot history
+def plot_history(history):
     # create subplots
-    fig, ax = plt.subplots()
-    frequency, power = [], []
-    line, = plt.plot([], [], 'ro')
-
-    def init():
-        return line,
-
-    def update(frame):
-        # get signal
-        signal = signal_per_frames[ frame % total_frames ]
-        # get fft abs
-        spectrum = signal.fft().abs()
-        # get data itself
-        data = spectrum.data
-        # get frequency
-        frequency = data.index
-        # get power
-        power = data.values
-        # set data of line plot
-        line.set_data(frequency, power)
-        # return line
-        return line,
-
-    # create animation
-    ani = FuncAnimation(fig, update, init_func=init, blit=True)
-
-    # show plot
+    fig, axes = plt.subplots(len(history.keys()), 1)
+    index = 0
+    # for each key
+    for key in history.keys():
+        axes[index].plot(history[key], color="green")
+        axes[index].set_xlabel("Epochs")
+        axes[index].set_ylabel( str(key) )
+        index += 1
     plt.show()
 
+def main_read(path):
 
-# create datafrme from wavio object
-def to_signal(wavio_object, microsecond=0):
+    dataframe = pd.read_csv(path, index_col=0)
+
+    # create model
+    model = Model(40, 10, [50, 40], ["sigmoid", "relu", "softmax"], 'adam', 0.001, ['accuracy'], "categorical_crossentropy")
+    
+    #features index
+    features_index = list( [str(i) for i in range(40) ] ) + ["file"]
+    # x values
+    x_values = dataframe[features_index].values
+
+    y_values = to_categorical( dataframe["Digito"].values, 10)
+
+    # split into x values and y values
+    x_train, x_test, y_train, y_test = train_test_split(x_values, y_values, train_size = 0.7)
+
+    history = model.train(x_train[:, :-1], y_train, epochs = 200).history
+
+    plot_history(history)
+
+    results = model.evaluate(x_test[:, :-1], y_test)
+
+    y_predict = model.predict_classes(x_test[:, :-1])
+
+    files = x_test[:, -1]
+    print(len(files))
+
+    print(len(y_predict))
+
+    result = pd.DataFrame( np.stack( [files, y_predict], axis = 1), columns = ["File", "Predicao"])
+
+    result.to_csv("predicao.csv")
+    
+    print(result)
+
+def main_save(path = "../../data/8bit-C4.wav"):
+
     # get data
-    data = wavio_object.data.copy()
-    # get index
-    # base start
-    base = datetime.today()
-    #base = base.replace(hour = 0, second=0, minute=0, microsecond=microsecond)
-    # increase timedelta
-    index = [base, ]
-    # for each value
-    for i in range(1, wavio_object.data.shape[0]):
-        # add to index the last element + timedelta
-        index.append( index[-1] + timedelta(seconds=1.0/wavio_object.rate) )
-    return [ TimeSignal(pd.Series(data[:, i], index = index), wavio_object.rate) for i in range(data.shape[1]) ]
-    
-# function to slice the total signal into frames
-def slice_signal(signal, total_samples):
-    # sample size
-    sample_size = len(signal.data) // total_samples
-    # slice data
-    return list( [ TimeSignal(signal.data[ i*sample_size : (i+1)*sample_size ], signal.sampling_rate) for i in range(total_samples) ] )
+    n_mfcc = 40
+    data = os.listdir('../../data/recordings')
+    data = list([ i.replace('.wav', '').split("_") + [i,] for i in data])
+
+    # create dataframe from data
+    dataframe = pd.DataFrame(data, columns = ["Digit", "Voice Actor", "Replic", "Recording"])
+    # load mfccs of each recording
+    mffcs = dataframe["Recording"].apply(lambda path: extract_features("../../data/recordings/" + path, n_mfcc) )
+    mffcs =  np.stack( list(mffcs.values), axis = 0)
+
+    total_values = np.concatenate([dataframe.values, mffcs], axis=1)
+
+    dataframe = pd.DataFrame(total_values)
+
+    print(dataframe)
+
+    dataframe.to_csv("test.csv")
+
+    return
+
     
 
 
-def main(path = "../../data/8bit-C4.wav"):
-    wav_control = wavio.read(path)
-    print(wav_control)
-    # creat signal
-    signals = to_signal(wav_control)
-    signal = signals[0]
-    signal.plot()
-    signal.fft().abs().plot()
     
-    # get spectrogram
-    spectrogram(signal)
+    
+    
+    
+    
+    
+    
+    
 
 
 if __name__ == "__main__":
     # get args
     args = sys.argv
     # get path
+
     file = "8bit-C4.wav" if len(args) == 1 else args[1]
-    main("../../data/" + file)
+    # main("../../data/" + file)
+
+    main_read(file)
