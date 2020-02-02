@@ -72,8 +72,11 @@ def to_signal(wavio_object, microsecond=0):
     for i in range(1, wavio_object.data.shape[0]):
         # add to index the last element + timedelta
         index.append( index[-1] + timedelta(milliseconds=1000.0/wavio_object.rate) )
-    return [ Signal(pd.Series(data[:, i])) for i in range(data.shape[1]) ]
+    return [ Signal(pd.Series(data[:, i], index = index)) for i in range(data.shape[1]) ]
     
+# function to slice the total signal into frames
+def slice_signal(signal, sampling_rate):
+    print(signal.index)
 
 def main(path = "../../data/8bit-C4.wav"):
     wav_control = wavio.read(path)
@@ -82,7 +85,19 @@ def main(path = "../../data/8bit-C4.wav"):
     signals = to_signal(wav_control)
     signal = signals[0]
     signal.plot()
-    #signal.fft().abs().plot()
+    signal.fft().abs().plot()
+
+    #slice_signal(signal)
+    return
+
+    signal = sinusoid(w = 100*np.pi/2, sampling_rate=0.001)
+    signal.plot()
+    spec = signal.fft().abs()
+    print(spec.data)
+    print(spec.data.values.shape)
+    spec.plot()
+    
+    
     
 
 if __name__ == "__main__":

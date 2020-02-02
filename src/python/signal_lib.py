@@ -9,6 +9,8 @@ from scipy.fftpack import fft
 
 from datetime import datetime, time, date, timedelta
 
+
+
 class Signal:
 
     def __init__(self, data = None):
@@ -24,12 +26,8 @@ class Signal:
         if isinstance(v, pd.Series):
             self._data = v
         else:
-            # create time series
-            now = datetime.today()
-            # index by time
-            index = now + pd.to_timedelta( range(len(v)) , unit='ms')
             # set x
-            self._data = pd.Series(v.copy(), index = index)
+            self._data = pd.Series( v.copy() )
 
     # method to do a linear covolution sum operation
     def convolution(self, other):
@@ -51,42 +49,6 @@ class Signal:
     def autocorrelation(self):
         # return convulation on self
         return self.convolution(self)
-
-    # method to apply a function
-    def apply(self, function = lambda x: x, in_place = True):
-        # check if it is in place
-        if in_place:
-            # set self.data to the output of the functon passed
-            self.data = function(self.data, axis = 0)
-            # return self
-            return self
-        else:
-            # else, create another data
-            data = function(self.data.copy(), axis=0)
-            # create and return another signal
-            return Signal(data)
-
-    # method to plot on a subplot given
-    def subplot(self, y, ax = plt):
-        ax.stem(y, linefmt = 'C3-', markerfmt = 'C3.', basefmt='C0:', use_line_collection = True)
-        # return plt
-        return ax
-
-    # method to plot on a plot given 88
-    def plot(self):
-        # call data plot
-        self.data.plot()
-        # show plot
-        plt.show()
-
-    # method to stem plot
-    def stem(self):
-        # get data
-        data = self.data.values
-        # call subplot
-        self.subplot(data, ax)
-        # show plot
-        plt.show()
 
     # method to calculate the fast fourier transform of the signal
     def fft(self):
@@ -115,6 +77,42 @@ class Signal:
         plt.bar(f[:N // 2], np.abs(fft)[:N // 2] * 1 / N, width=0.4)  # 1 / N is a normalization factor
         # show plot
         plt.show()
+
+    # method to apply a function
+    def apply(self, function = lambda x: x, in_place = True):
+        # check if it is in place
+        if in_place:
+            # set self.data to the output of the functon passed
+            self.data = function(self.data)
+            # return self
+            return self
+        else:
+            # else, create another data
+            data = function( self.data.copy() )
+            # create and return another signal
+            return Signal(data, index=self.data.index)
+
+    # method to plot on a subplot given
+    def subplot(self, y, ax = plt):
+        ax.stem(y, linefmt = 'C3-', markerfmt = 'C3.', basefmt='C0:', use_line_collection = True)
+        # return plt
+        return ax
+
+    # method to plot on a plot given 88
+    def plot(self):
+        # call data plot
+        self.data.plot()
+        # show plot
+        plt.show()
+
+    # method to stem plot
+    def stem(self):
+        # get data
+        data = self.data.values
+        # call subplot
+        self.subplot(data, ax)
+        # show plot
+        plt.show()
     
     # method to calculate the energy of the signal
     def energy(self):
@@ -126,7 +124,7 @@ class Signal:
     def sum(self):
         # return the sum of the abs of the x squared
         data = self.data.copy()
-        return Signal( data.apply( lambda x: np.sum( x ) , axis=0 ) )
+        return np.sum( data )
 
     # method to return the real part signal
     def real(self):
@@ -151,18 +149,6 @@ class Signal:
         # return the sum of the abs of the x squared
         data = self.data.copy()
         return Signal( data.apply( lambda x: np.angle( x ) ) )
-
-    # method to compare the signal    
-    def __eq__(self, other):
-        if isinstance(other, Signal):
-            return np.all(signal.data == other.data)
-        return False
-
-    # method to compare the signal    
-    def __ne__(self, other):
-        if isinstance(other, Signal):
-            return not self == other
-        return False
 
     # method to convert to string
     def __str__(self): return "Signal:\n" + str(self.data)
@@ -202,7 +188,6 @@ class Signal:
         if isinstance(other, Signal):
             other = other.data
         return Signal( self.data.pow(other, fill_value = 0.0) )
-
 
 #==========================================================================================================================#
 #==========================================================================================================================#
@@ -280,14 +265,12 @@ def _fold_half(array):
 
 # function to make a Time Series
 def make_time_series(x, n, unit = 'milliseconds'):
-    # x reshape
-    x = np.reshape(x, [len(x), 1])
     # get now time date
     now = datetime.today()
     # get index based on time step in the unit passed
-    index = now + pd.to_timedelta(n, unit=unit) - now 
+    index = now + pd.to_timedelta(n, unit=unit)
     # create series
-    series = pd.DataFrame(x, index=index)
+    series = pd.Series(x, index=index)
     # return series
     return series
     
@@ -306,9 +289,9 @@ def unit_sample(n0 = 0, n1 = 0, n2 = 10):
     return Signal( make_time_series(x, n) )
 
 # function to creare sinusoid
-def sinusoid(a = 1, o = 0, w = np.pi, n1 = 0, n2 = 10):
-    n = np.arange(n1, n2)
-    x = a*np.sin(o + w*n/100.0)
+def sinusoid(a = 1, o = 0, w = np.pi, n1 = 0, n2 = 10, sampling_rate=0.01):
+    n = np.arange(n1, n2, sampling_rate)
+    x = a*np.sin(o + w*n)
     return Signal( make_time_series(x, n) )
 
 # function to create random signal
